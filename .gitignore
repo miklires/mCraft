@@ -1,0 +1,7 @@
+.gradle/
+.gradle-codex/
+.idea/
+build/
+out/
+*.iml
+.env
