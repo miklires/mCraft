@@ -1,0 +1,18 @@
+prefix: "<gold><bold>mCraft</bold></gold> <dark_gray>»</dark_gray> "
+common:
+  no-permission: "<red>У вас нет прав."
+  player-only: "<red>Команда доступна только игрокам."
+  reloaded: "<green>Предметы, рецепты и сообщения перезагружены."
+command:
+  unknown-sub: "<red>Неизвестная подкоманда."
+  gui-player-only: "<red>GUI доступен только игрокам."
+  usage-give: "<yellow>Использование: <white>/mcraft give <id> [amount]"
+item:
+  not-found: "<red>Кастомный предмет не найден."
+  given: "<green>Выдано <white>{id}</white> ×{amount}."
+recipe:
+  deleted: "<green>Рецепт <white>{id}</white> удалён."
+  saved: "<green>Рецепт <white>{id}</white> сохранён."
+  saved-with-priority: "<green>Рецепт <white>{id}</white> сохранён с приоритетом."
+  need-result: "<red>Положите результат в выходной слот."
+  need-ingredient: "<red>Добавьте хотя бы один ингредиент."

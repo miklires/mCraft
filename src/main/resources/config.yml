@@ -1,0 +1,25 @@
+config-version: 1
+language: en_US
+
+storage:
+  items-folder: "items"
+  recipes-folder: "recipes"
+
+gui:
+  main-title: "<dark_green><b>mCraft</b></dark_green>"
+  items-title: "<dark_green>Кастомные предметы</dark_green>"
+  recipes-title: "<dark_green>Рецепты</dark_green>"
+  item-edit-title: "<dark_green>Редактор предмета</dark_green>"
+  recipe-edit-title: "<dark_green>Редактор рецепта</dark_green>"
+
+defaults:
+  next-item-id: 1
+  next-recipe-id: 1
+
+metrics:
+  enabled: true
+  bstats-id: 33357
+
+updates:
+  enabled: true
+  modrinth-project-id: "mCraft"

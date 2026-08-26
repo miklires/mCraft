@@ -1,0 +1,30 @@
+name: mCraft
+version: ${version}
+main: io.github.miklires.mcraft.MCraft
+api-version: '26.2'
+author: miklires
+description: Custom crafting recipes plugin
+folia-supported: true
+
+commands:
+  mcraft:
+    description: Manage mCraft
+    usage: /mcraft [reload|give <id> [amount]]
+
+permissions:
+  mcraft.command.mcraft:
+    description: Open the mCraft GUI
+    default: op
+  mcraft.command.give:
+    description: Give registered custom items
+    default: op
+  mcraft.command.reload:
+    description: Reload items, recipes, and messages
+    default: op
+  mcraft.admin:
+    description: All mCraft administration permissions
+    default: op
+    children:
+      mcraft.command.mcraft: true
+      mcraft.command.give: true
+      mcraft.command.reload: true

@@ -1,0 +1,18 @@
+prefix: "<gold><bold>mCraft</bold></gold> <dark_gray>»</dark_gray> "
+common:
+  no-permission: "<red>You do not have permission."
+  player-only: "<red>This command is only available to players."
+  reloaded: "<green>Items, recipes, and messages reloaded."
+command:
+  unknown-sub: "<red>Unknown subcommand."
+  gui-player-only: "<red>The GUI is only available to players."
+  usage-give: "<yellow>Usage: <white>/mcraft give <id> [amount]"
+item:
+  not-found: "<red>Custom item not found."
+  given: "<green>Given <white>{id}</white> ×{amount}."
+recipe:
+  deleted: "<green>Recipe <white>{id}</white> deleted."
+  saved: "<green>Recipe <white>{id}</white> saved."
+  saved-with-priority: "<green>Recipe <white>{id}</white> saved with vanilla priority."
+  need-result: "<red>Place a result in the output slot."
+  need-ingredient: "<red>Add at least one ingredient."
