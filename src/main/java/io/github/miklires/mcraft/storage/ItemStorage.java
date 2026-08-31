@@ -9,16 +9,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class ItemStorage {
+
+    private static final Pattern SAFE_ID = Pattern.compile("[a-z0-9][a-z0-9_-]{0,63}");
 
     private final Plugin plugin;
     private final File folder;
 
     public ItemStorage(Plugin plugin) {
         this.plugin = plugin;
-        this.folder = new File(plugin.getDataFolder(), "items");
-        if (!folder.exists()) folder.mkdirs();
+        this.folder = StorageFolder.resolve(plugin, "storage.items-folder", "items");
     }
 
     public Map<String, CustomItem> loadAll() {
@@ -30,7 +33,7 @@ public class ItemStorage {
                 CustomItem ci = load(f);
                 if (ci != null && ci.getId() != null) result.put(ci.getId(), ci);
             } catch (Exception e) {
-                plugin.getLogger().warning("Не удалось прочитать " + f.getName() + ": " + e.getMessage());
+                plugin.getLogger().warning("Could not read item " + f.getName() + ": " + e.getMessage());
             }
         }
         return result;
@@ -40,7 +43,10 @@ public class ItemStorage {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
         String id = cfg.getString("id");
         String materialName = cfg.getString("material");
-        if (id == null || materialName == null) return null;
+        if (!validId(id) || materialName == null) {
+            plugin.getLogger().warning("Skipped item with unsafe or missing id in " + f.getName());
+            return null;
+        }
         Material mat = Material.matchMaterial(materialName);
         if (mat == null) return null;
 
@@ -50,6 +56,8 @@ public class ItemStorage {
         ci.setVersion(cfg.getInt("version", 1));
         ci.setItemModel(cfg.getString("item-model"));
         ci.setUnbreakable(cfg.getBoolean("unbreakable", false));
+        ci.setTags(cfg.getStringList("tags"));
+        ci.setItemFlags(cfg.getStringList("item-flags"));
 
         if (cfg.isConfigurationSection("enchantments")) {
             Map<String, Integer> enchants = new LinkedHashMap<>();
@@ -62,7 +70,7 @@ public class ItemStorage {
     }
 
     public void save(CustomItem ci) {
-        File f = new File(folder, ci.getId() + ".yml");
+        File f = fileFor(ci.getId());
         YamlConfiguration cfg = new YamlConfiguration();
         cfg.set("id", ci.getId());
         cfg.set("material", ci.getMaterial().name());
@@ -71,6 +79,8 @@ public class ItemStorage {
         cfg.set("version", ci.getVersion());
         cfg.set("item-model", ci.getItemModel());
         cfg.set("unbreakable", ci.isUnbreakable());
+        cfg.set("tags", new ArrayList<>(ci.getTags()));
+        cfg.set("item-flags", new ArrayList<>(ci.getItemFlags()));
         for (var e : ci.getEnchantments().entrySet()) {
             cfg.set("enchantments." + e.getKey(), e.getValue());
         }
@@ -82,8 +92,20 @@ public class ItemStorage {
     }
 
     public void delete(String id) {
-        File f = new File(folder, id + ".yml");
+        File f = fileFor(id);
         if (f.exists()) f.delete();
+    }
+
+    private File fileFor(String id) {
+        if (!validId(id)) throw new IllegalArgumentException("Item id must match " + SAFE_ID.pattern());
+        Path root = folder.toPath().toAbsolutePath().normalize();
+        Path file = root.resolve(id + ".yml").normalize();
+        if (!file.getParent().equals(root)) throw new IllegalArgumentException("Item path leaves storage directory");
+        return file.toFile();
+    }
+
+    private static boolean validId(String id) {
+        return id != null && SAFE_ID.matcher(id).matches();
     }
 }
 

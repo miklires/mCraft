@@ -1,16 +1,22 @@
-config-version: 1
+config-version: 2
 language: en_US
 
 storage:
+  # Keep these folders inside plugins/mCraft. Item/recipe IDs accept lowercase
+  # letters, digits, underscores and dashes (maximum 64 characters).
   items-folder: "items"
   recipes-folder: "recipes"
 
 gui:
   main-title: "<dark_green><b>mCraft</b></dark_green>"
-  items-title: "<dark_green>Кастомные предметы</dark_green>"
-  recipes-title: "<dark_green>Рецепты</dark_green>"
-  item-edit-title: "<dark_green>Редактор предмета</dark_green>"
-  recipe-edit-title: "<dark_green>Редактор рецепта</dark_green>"
+  items-title: "<dark_green>Custom items</dark_green>"
+  recipes-title: "<dark_green>Recipes</dark_green>"
+  item-edit-title: "<dark_green>Item editor</dark_green>"
+  recipe-edit-title: "<dark_green>Recipe editor</dark_green>"
+
+commands:
+  # Protects against accidental giant grants while still allowing 36 stacks.
+  max-give-amount: 2304
 
 defaults:
   next-item-id: 1

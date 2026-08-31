@@ -13,16 +13,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class RecipeStorage {
+
+    private static final Pattern SAFE_ID = Pattern.compile("[a-z0-9][a-z0-9_-]{0,63}");
 
     private final Plugin plugin;
     private final File folder;
 
     public RecipeStorage(Plugin plugin) {
         this.plugin = plugin;
-        this.folder = new File(plugin.getDataFolder(), "recipes");
-        if (!folder.exists()) folder.mkdirs();
+        this.folder = StorageFolder.resolve(plugin, "storage.recipes-folder", "recipes");
     }
 
     public Map<String, CustomRecipe> loadAll() {
@@ -34,7 +37,7 @@ public class RecipeStorage {
                 CustomRecipe r = load(f);
                 if (r != null && r.getId() != null) result.put(r.getId(), r);
             } catch (Exception e) {
-                plugin.getLogger().warning("Не удалось прочитать рецепт " + f.getName() + ": " + e.getMessage());
+                plugin.getLogger().warning("Could not read recipe " + f.getName() + ": " + e.getMessage());
             }
         }
         return result;
@@ -44,7 +47,10 @@ public class RecipeStorage {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
         String id = cfg.getString("id");
         String typeName = cfg.getString("type");
-        if (id == null || typeName == null) return null;
+        if (!validId(id) || typeName == null) {
+            plugin.getLogger().warning("Skipped recipe with unsafe or missing id in " + f.getName());
+            return null;
+        }
 
         CustomRecipe r = new CustomRecipe(id, RecipeType.valueOf(typeName));
 
@@ -83,6 +89,10 @@ public class RecipeStorage {
         }
         r.setResultAmount(cfg.getInt("result.amount", 1));
         r.setOverrideVanilla(cfg.getBoolean("override-vanilla", false));
+        r.setPermission(cfg.getString("conditions.permission"));
+        r.setMinimumLevel(cfg.getInt("conditions.minimum-level", 0));
+        r.setWorlds(cfg.getStringList("conditions.worlds"));
+        r.setAllowAutomation(cfg.getBoolean("conditions.allow-automation", true));
         return r;
     }
 
@@ -95,7 +105,7 @@ public class RecipeStorage {
     }
 
     public void save(CustomRecipe r) {
-        File f = new File(folder, r.getId() + ".yml");
+        File f = fileFor(r.getId());
         YamlConfiguration cfg = new YamlConfiguration();
         cfg.set("id", r.getId());
         cfg.set("type", r.getType().name());
@@ -127,6 +137,10 @@ public class RecipeStorage {
         }
         cfg.set("result.amount", r.getResultAmount());
         cfg.set("override-vanilla", r.isOverrideVanilla());
+        if (r.getPermission() != null) cfg.set("conditions.permission", r.getPermission());
+        if (r.getMinimumLevel() > 0) cfg.set("conditions.minimum-level", r.getMinimumLevel());
+        if (!r.getWorlds().isEmpty()) cfg.set("conditions.worlds", new ArrayList<>(r.getWorlds()));
+        cfg.set("conditions.allow-automation", r.isAllowAutomation());
 
         try {
             cfg.save(f);
@@ -136,8 +150,20 @@ public class RecipeStorage {
     }
 
     public void delete(String id) {
-        File f = new File(folder, id + ".yml");
+        File f = fileFor(id);
         if (f.exists()) f.delete();
+    }
+
+    private File fileFor(String id) {
+        if (!validId(id)) throw new IllegalArgumentException("Recipe id must match " + SAFE_ID.pattern());
+        Path root = folder.toPath().toAbsolutePath().normalize();
+        Path file = root.resolve(id + ".yml").normalize();
+        if (!file.getParent().equals(root)) throw new IllegalArgumentException("Recipe path leaves storage directory");
+        return file.toFile();
+    }
+
+    private static boolean validId(String id) {
+        return id != null && SAFE_ID.matcher(id).matches();
     }
 }
 

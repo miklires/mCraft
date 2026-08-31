@@ -2,6 +2,8 @@ package io.github.miklires.mcraft.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class CustomRecipe {
 
@@ -13,6 +15,10 @@ public class CustomRecipe {
     private org.bukkit.Material resultVanilla;
     private int resultAmount = 1;
     private boolean overrideVanilla = false;
+    private String permission;
+    private int minimumLevel;
+    private Set<String> worlds = new LinkedHashSet<>();
+    private boolean allowAutomation = true;
 
     public CustomRecipe() {}
 
@@ -45,6 +51,19 @@ public class CustomRecipe {
 
     public boolean isOverrideVanilla() { return overrideVanilla; }
     public void setOverrideVanilla(boolean overrideVanilla) { this.overrideVanilla = overrideVanilla; }
+
+    public String getPermission() { return permission; }
+    public void setPermission(String permission) { this.permission = permission == null || permission.isBlank() ? null : permission.trim(); }
+    public int getMinimumLevel() { return minimumLevel; }
+    public void setMinimumLevel(int minimumLevel) { this.minimumLevel = Math.max(0, minimumLevel); }
+    public Set<String> getWorlds() { return Set.copyOf(worlds); }
+    public void setWorlds(java.util.Collection<String> worlds) {
+        this.worlds = new LinkedHashSet<>();
+        if (worlds != null) worlds.stream().filter(java.util.Objects::nonNull).map(String::trim)
+                .filter(s -> !s.isEmpty()).map(String::toLowerCase).forEach(this.worlds::add);
+    }
+    public boolean isAllowAutomation() { return allowAutomation; }
+    public void setAllowAutomation(boolean allowAutomation) { this.allowAutomation = allowAutomation; }
 
     public boolean isResultCustom() {
         return resultRefCustomId != null && !resultRefCustomId.isBlank();

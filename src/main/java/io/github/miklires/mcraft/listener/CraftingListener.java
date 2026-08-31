@@ -5,6 +5,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -34,7 +36,8 @@ public class CraftingListener implements Listener {
                 && keyed.getKey().getNamespace().equals(plugin.getName().toLowerCase())) {
             CustomRecipe ours = plugin.getRecipeRegistry().get(keyed.getKey().getKey());
             if (ours == null) return;
-            if (!validateIngredients(inv, ours, recipe)) {
+            Player player = event.getView().getPlayer() instanceof Player p ? p : null;
+            if (!validateIngredients(inv, ours, recipe) || !canCraft(player, ours)) {
                 inv.setResult(null);
             }
             return;
@@ -42,12 +45,35 @@ public class CraftingListener implements Listener {
 
         for (CustomRecipe ours : plugin.getRecipeRegistry().candidates(inv.getMatrix())) {
             if (!ours.isOverrideVanilla()) continue;
-            if (validateIngredients(inv, ours, ours.getType() == io.github.miklires.mcraft.model.RecipeType.SHAPED
+            Player player = event.getView().getPlayer() instanceof Player p ? p : null;
+            if (canCraft(player, ours) && validateIngredients(inv, ours, ours.getType() == io.github.miklires.mcraft.model.RecipeType.SHAPED
                     ? newShapedDummy() : newShapelessDummy())) {
                 inv.setResult(buildOurResult(ours));
                 return;
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onCraft(CraftItemEvent event) {
+        if (!(event.getRecipe() instanceof Keyed keyed)
+                || !keyed.getKey().getNamespace().equals(plugin.getName().toLowerCase(java.util.Locale.ROOT))) return;
+        CustomRecipe recipe = plugin.getRecipeRegistry().get(keyed.getKey().getKey());
+        Player player = event.getWhoClicked() instanceof Player p ? p : null;
+        if (recipe == null || !canCraft(player, recipe)
+                || !validateIngredients(event.getInventory(), recipe, event.getRecipe())) {
+            event.setCancelled(true);
+            event.getInventory().setResult(null);
+            if (player != null) player.sendMessage(plugin.getMessageUtil().component("recipe.conditions-denied"));
+        }
+    }
+
+    private boolean canCraft(Player player, CustomRecipe recipe) {
+        if (player == null) return recipe.isAllowAutomation();
+        if (recipe.getPermission() != null && !player.hasPermission(recipe.getPermission())) return false;
+        if (player.getLevel() < recipe.getMinimumLevel()) return false;
+        return recipe.getWorlds().isEmpty()
+                || recipe.getWorlds().contains(player.getWorld().getName().toLowerCase(java.util.Locale.ROOT));
     }
 
     private Recipe newShapedDummy() {
@@ -84,67 +110,31 @@ public class CraftingListener implements Listener {
 
     private boolean validateShaped(ItemStack[] matrix, CustomRecipe ours) {
         int gridSize = matrix.length == 4 ? 2 : 3;
-        if (gridSize == 2) {
-            for (int row = 0; row <= 1; row++) {
-                for (int col = 0; col <= 1; col++) {
-                    if (!shapedMatches2x2InRecipe(matrix, ours, row, col)) {
-                        continue;
-                    }
-                    return true;
-                }
-            }
-            return false;
+        int minRow = 3, minCol = 3, maxRow = -1, maxCol = -1;
+        for (int i = 0; i < 9; i++) if (ours.getSlot(i) != null) {
+            minRow = Math.min(minRow, i / 3); maxRow = Math.max(maxRow, i / 3);
+            minCol = Math.min(minCol, i % 3); maxCol = Math.max(maxCol, i % 3);
         }
-        for (int rowOffset = 0; rowOffset <= 3 - getRecipeRows(ours); rowOffset++) {
-            for (int colOffset = 0; colOffset <= 3 - getRecipeCols(ours); colOffset++) {
-                if (shapedMatchesAt(matrix, ours, rowOffset, colOffset)) return true;
+        if (maxRow < 0) return false;
+        int height = maxRow - minRow + 1, width = maxCol - minCol + 1;
+        if (height > gridSize || width > gridSize) return false;
+        for (int rowOffset = 0; rowOffset <= gridSize - height; rowOffset++) {
+            for (int colOffset = 0; colOffset <= gridSize - width; colOffset++) {
+                if (shapedMatchesAt(matrix, gridSize, ours, minRow, minCol, height, width, rowOffset, colOffset)) return true;
             }
         }
         return false;
     }
 
-    private int getRecipeRows(CustomRecipe r) {
-        int rows = 0;
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
-                if (r.getSlot(row * 3 + col) != null) {
-                    if (row + 1 > rows) rows = row + 1;
-                }
-            }
-        }
-        return rows == 0 ? 1 : rows;
-    }
-
-    private int getRecipeCols(CustomRecipe r) {
-        int cols = 0;
-        for (int col = 0; col < 3; col++) {
-            for (int row = 0; row < 3; row++) {
-                if (r.getSlot(row * 3 + col) != null) {
-                    if (col + 1 > cols) cols = col + 1;
-                }
-            }
-        }
-        return cols == 0 ? 1 : cols;
-    }
-
-    private boolean shapedMatchesAt(ItemStack[] matrix, CustomRecipe r, int rowOffset, int colOffset) {
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
-                RecipeIngredient expected = r.getSlot(row * 3 + col);
-                int matrixIdx = (row + rowOffset) * 3 + (col + colOffset);
-                if (matrixIdx >= matrix.length) return false;
-                ItemStack actual = matrix[matrixIdx];
-                if (!ItemMatcher.matches(actual, expected)) return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean shapedMatches2x2InRecipe(ItemStack[] matrix, CustomRecipe r, int rowStart, int colStart) {
-        for (int row = 0; row < 2; row++) {
-            for (int col = 0; col < 2; col++) {
-                RecipeIngredient expected = r.getSlot((row + rowStart) * 3 + (col + colStart));
-                ItemStack actual = matrix[row * 2 + col];
+    private boolean shapedMatchesAt(ItemStack[] matrix, int gridSize, CustomRecipe r,
+                                    int minRow, int minCol, int height, int width,
+                                    int rowOffset, int colOffset) {
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
+                int rr = row - rowOffset, rc = col - colOffset;
+                RecipeIngredient expected = rr >= 0 && rr < height && rc >= 0 && rc < width
+                        ? r.getSlot((minRow + rr) * 3 + minCol + rc) : null;
+                ItemStack actual = matrix[row * gridSize + col];
                 if (!ItemMatcher.matches(actual, expected)) return false;
             }
         }
