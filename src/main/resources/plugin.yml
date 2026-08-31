@@ -9,7 +9,7 @@ folia-supported: true
 commands:
   mcraft:
     description: Manage mCraft
-    usage: /mcraft [reload|give <id> [amount]]
+    usage: /mcraft [item <id>|recipe <id>|reload|give <id> [amount] [player]]
 
 permissions:
   mcraft.command.mcraft:
