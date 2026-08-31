@@ -35,10 +35,10 @@ public class MCraft extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new io.github.miklires.mcraft.listener.ItemUpgradeListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new io.github.miklires.mcraft.gui.GuiClickListener(this), this);
-        getServer().getPluginManager().registerEvents(
-                new io.github.miklires.mcraft.gui.GuiCloseListener(), this);
-
-        getCommand("mcraft").setExecutor(new MCraftCommand(this));
+        var command = java.util.Objects.requireNonNull(getCommand("mcraft"), "mcraft command missing from plugin.yml");
+        MCraftCommand commandHandler = new MCraftCommand(this);
+        command.setExecutor(commandHandler);
+        command.setTabCompleter(commandHandler);
         getServer().getServicesManager().register(MCraftAPI.class, new DefaultMCraftAPI(this), this, org.bukkit.plugin.ServicePriority.Normal);
         if (getConfig().getBoolean("metrics.enabled", true) && getConfig().getInt("metrics.bstats-id", 0) > 0) new Metrics(this, getConfig().getInt("metrics.bstats-id"));
         if (getConfig().getBoolean("updates.enabled", true)) io.github.miklires.mcraft.update.UpdateChecker.checkAsync(this, getConfig().getString("updates.modrinth-project-id", ""));

@@ -27,22 +27,24 @@ public class RecipeViewGui {
             return;
         }
 
-        var title = MiniMessage.miniMessage().deserialize("<dark_green>Рецепт:</dark_green> <white>" + r.getId());
-        Inventory inv = Bukkit.createInventory(new GuiHolder(GuiHolder.GuiScreen.RECIPE_VIEW), 45, title);
+        var title = MiniMessage.miniMessage().deserialize(plugin.getMessageUtil().get("gui.recipe-title", "id", r.getId()));
+        GuiHolder holder = new GuiHolder(GuiHolder.GuiScreen.RECIPE_VIEW);
+        Inventory inv = Bukkit.createInventory(holder, 45, title);
+        holder.bind(inv);
 
         for (int i = 0; i < 45; i++) inv.setItem(i, GuiButton.filler());
-        inv.setItem(0, GuiButton.create(Material.ARROW, GuiAction.BACK, null, "<yellow>← Назад"));
+        inv.setItem(0, GuiButton.create(Material.ARROW, GuiAction.BACK, null, plugin.getMessageUtil().get("gui.back")));
         inv.setItem(7, GuiButton.create(Material.WRITABLE_BOOK, GuiAction.RECIPE_EDIT, r.getId(),
-                "<yellow>Редактировать"));
+                plugin.getMessageUtil().get("gui.edit")));
         inv.setItem(8, GuiButton.create(Material.PAPER, GuiAction.NOOP, null,
-                "<gold>Информация",
+                plugin.getMessageUtil().get("gui.information"),
                 "<dark_gray>ID: <gray>" + r.getId(),
-                "<dark_gray>Тип: <gray>" + (r.getType() == RecipeType.SHAPED ? "С формой" : "Без формы")
+                plugin.getMessageUtil().get("gui.type", "type", plugin.getMessageUtil().get(r.getType() == RecipeType.SHAPED ? "gui.shaped" : "gui.shapeless"))
         ));
         inv.setItem(44, GuiButton.create(Material.RED_CONCRETE, GuiAction.RECIPE_DELETE, r.getId(),
-                "<red><b>Удалить рецепт</b>",
+                plugin.getMessageUtil().get("gui.delete-recipe"),
                 "",
-                "<gray>Клик чтобы подтвердить"));
+                plugin.getMessageUtil().get("gui.click-confirm")));
 
         if (r.getType() == RecipeType.SHAPED) {
             for (int i = 0; i < 9; i++) {
@@ -69,12 +71,12 @@ public class RecipeViewGui {
             CustomItem ci = plugin.getItemRegistry().get(ing.getCustomId());
             if (ci != null) return ci.buildItemStack(1);
             return GuiButton.create(Material.BARRIER, GuiAction.NOOP, null,
-                    "<red>Предмет не найден",
+                    plugin.getMessageUtil().get("gui.item-missing"),
                     "<gray>ID: " + ing.getCustomId());
         }
         ItemStack s = new ItemStack(ing.getMaterial());
         List<String> lore = new ArrayList<>();
-        lore.add("<dark_gray>Ванильный");
+        lore.add(plugin.getMessageUtil().get("gui.vanilla"));
         return GuiButton.overlay(s, GuiAction.NOOP, null, null, lore);
     }
 
@@ -82,7 +84,7 @@ public class RecipeViewGui {
         if (r.isResultCustom()) {
             CustomItem ci = plugin.getItemRegistry().get(r.getResultRefCustomId());
             if (ci != null) return ci.buildItemStack(r.getResultAmount());
-            return GuiButton.create(Material.BARRIER, GuiAction.NOOP, null, "<red>Результат не найден");
+            return GuiButton.create(Material.BARRIER, GuiAction.NOOP, null, plugin.getMessageUtil().get("gui.result-missing"));
         }
         if (r.getResultVanilla() != null) {
             return new ItemStack(r.getResultVanilla(), r.getResultAmount());

@@ -11,6 +11,7 @@ public class GuiHolder implements InventoryHolder {
     private final GuiScreen screen;
     private final Set<Integer> editableSlots;
     private String editingRecipeId;
+    private Inventory inventory;
 
     public GuiHolder(GuiScreen screen) {
         this(screen, Set.of());
@@ -37,10 +38,16 @@ public class GuiHolder implements InventoryHolder {
         this.editingRecipeId = editingRecipeId;
     }
 
+    public void bind(Inventory inventory) {
+        if (this.inventory != null) throw new IllegalStateException("Inventory already bound");
+        this.inventory = inventory;
+    }
+
     @NotNull
     @Override
     public Inventory getInventory() {
-        throw new UnsupportedOperationException("Inventory bound externally");
+        if (inventory == null) throw new IllegalStateException("Inventory not bound yet");
+        return inventory;
     }
 
     public enum GuiScreen {

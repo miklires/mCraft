@@ -17,19 +17,21 @@ public class ItemViewGui {
             return;
         }
 
-        var title = MiniMessage.miniMessage().deserialize("<dark_green>Предмет:</dark_green> <white>" + ci.getId());
-        Inventory inv = Bukkit.createInventory(new GuiHolder(GuiHolder.GuiScreen.ITEM_VIEW), 27, title);
+        var title = MiniMessage.miniMessage().deserialize(plugin.getMessageUtil().get("gui.item-title", "id", ci.getId()));
+        GuiHolder holder = new GuiHolder(GuiHolder.GuiScreen.ITEM_VIEW);
+        Inventory inv = Bukkit.createInventory(holder, 27, title);
+        holder.bind(inv);
 
         for (int i = 0; i < 27; i++) inv.setItem(i, GuiButton.filler());
 
-        inv.setItem(0, GuiButton.create(Material.ARROW, GuiAction.BACK, null, "<yellow>← Назад"));
+        inv.setItem(0, GuiButton.create(Material.ARROW, GuiAction.BACK, null, plugin.getMessageUtil().get("gui.back")));
 
         inv.setItem(13, ci.buildItemStack(1));
 
         inv.setItem(11, GuiButton.create(Material.LIME_DYE, GuiAction.GIVE_ITEM, ci.getId() + ":1",
-                "<green>Выдать 1 шт"));
+                plugin.getMessageUtil().get("gui.give-one")));
         inv.setItem(15, GuiButton.create(Material.LIME_CONCRETE, GuiAction.GIVE_ITEM, ci.getId() + ":64",
-                "<green>Выдать 64 шт"));
+                plugin.getMessageUtil().get("gui.give-stack")));
 
         player.openInventory(inv);
     }

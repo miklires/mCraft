@@ -23,16 +23,18 @@ public class RecipesListGui {
         page = Math.max(0, Math.min(page, totalPages - 1));
 
         var title = MiniMessage.miniMessage().deserialize(
-                "<dark_green>Рецепты</dark_green> <gray>(" + (page + 1) + "/" + totalPages + ")");
-        Inventory inv = Bukkit.createInventory(new GuiHolder(GuiHolder.GuiScreen.RECIPES_LIST), 54, title);
+                plugin.getMessageUtil().get("gui.recipes-title", "page", String.valueOf(page + 1), "pages", String.valueOf(totalPages)));
+        GuiHolder holder = new GuiHolder(GuiHolder.GuiScreen.RECIPES_LIST);
+        Inventory inv = Bukkit.createInventory(holder, 54, title);
+        holder.bind(inv);
 
         for (int i = 0; i < 9; i++) inv.setItem(i, GuiButton.filler());
         for (int i = 45; i < 54; i++) inv.setItem(i, GuiButton.filler());
 
         inv.setItem(0, GuiButton.create(Material.ARROW, GuiAction.BACK, null,
-                "<yellow>← Назад"));
+                plugin.getMessageUtil().get("gui.back")));
         inv.setItem(4, GuiButton.create(Material.EMERALD, GuiAction.RECIPE_CREATE, null,
-                "<green><b>+ Создать рецепт</b>"));
+                plugin.getMessageUtil().get("gui.create-recipe")));
 
         int start = page * PAGE_SIZE;
         for (int i = 0; i < PAGE_SIZE && start + i < all.size(); i++) {
@@ -43,11 +45,11 @@ public class RecipesListGui {
 
         if (page > 0) {
             inv.setItem(45, GuiButton.create(Material.ARROW, GuiAction.PAGE_PREV, String.valueOf(page - 1),
-                    "<yellow>← Предыдущая"));
+                    plugin.getMessageUtil().get("gui.previous")));
         }
         if (page < totalPages - 1) {
             inv.setItem(53, GuiButton.create(Material.ARROW, GuiAction.PAGE_NEXT, String.valueOf(page + 1),
-                    "<yellow>Следующая →"));
+                    plugin.getMessageUtil().get("gui.next")));
         }
 
         player.openInventory(inv);
@@ -66,9 +68,9 @@ public class RecipesListGui {
         List<String> extra = new ArrayList<>();
         extra.add("");
         extra.add("<dark_gray>ID: <gray>" + r.getId());
-        extra.add("<dark_gray>Тип: <gray>" + (r.getType().name().equals("SHAPED") ? "С формой" : "Без формы"));
+        extra.add(plugin.getMessageUtil().get("gui.type", "type", plugin.getMessageUtil().get(r.getType() == io.github.miklires.mcraft.model.RecipeType.SHAPED ? "gui.shaped" : "gui.shapeless")));
         extra.add("");
-        extra.add("<yellow>ЛКМ — просмотр");
+        extra.add(plugin.getMessageUtil().get("gui.left-view"));
         return GuiButton.overlay(preview, GuiAction.VIEW_RECIPE, r.getId(), null, extra);
     }
 }

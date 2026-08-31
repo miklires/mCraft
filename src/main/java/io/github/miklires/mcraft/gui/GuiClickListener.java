@@ -17,6 +17,7 @@ import io.github.miklires.mcraft.model.CustomRecipe;
 import io.github.miklires.mcraft.model.RecipeIngredient;
 import io.github.miklires.mcraft.model.RecipeType;
 import io.github.miklires.mcraft.registry.ItemBuilder;
+import io.github.miklires.mcraft.util.InventoryUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,17 @@ public class GuiClickListener implements Listener {
         if (clickedTop) {
             int slot = event.getRawSlot();
             if (holder.isEditable(slot)) {
+                // Recipe slots are virtual: copy a single cursor item or clear the slot.
+                // No player-owned stack enters the GUI, so closing/editing cannot duplicate items.
+                event.setCancelled(true);
+                ItemStack cursor = event.getCursor();
+                if (cursor == null || cursor.getType().isAir() || event.isRightClick()) {
+                    top.setItem(slot, null);
+                } else {
+                    ItemStack ghost = cursor.clone();
+                    ghost.setAmount(slot == RecipeEditGui.RESULT_SLOT ? cursor.getAmount() : 1);
+                    top.setItem(slot, ghost);
+                }
                 return;
             }
             event.setCancelled(true);
@@ -63,7 +75,7 @@ public class GuiClickListener implements Listener {
     public void onDrag(InventoryDragEvent event) {
         if (!(event.getView().getTopInventory().getHolder() instanceof GuiHolder holder)) return;
         for (int slot : event.getRawSlots()) {
-            if (slot < event.getView().getTopInventory().getSize() && !holder.isEditable(slot)) {
+            if (slot < event.getView().getTopInventory().getSize()) {
                 event.setCancelled(true);
                 return;
             }
@@ -135,7 +147,7 @@ public class GuiClickListener implements Listener {
             player.sendMessage(mm.deserialize(prefix + plugin.getMessageUtil().get("item.not-found")));
             return;
         }
-        player.getInventory().addItem(ci.buildItemStack(amount));
+        InventoryUtil.giveOrDrop(player, ci.buildItemStack(amount));
         player.sendMessage(mm.deserialize(prefix + plugin.getMessageUtil().get("item.given",
                 "id", ci.getId(),
                 "amount", String.valueOf(amount))));
@@ -152,12 +164,12 @@ public class GuiClickListener implements Listener {
     private void handleToggleType(Inventory top) {
         RecipeType current = RecipeEditGui.readType(top);
         RecipeType next = current == RecipeType.SHAPED ? RecipeType.SHAPELESS : RecipeType.SHAPED;
-        top.setItem(RecipeEditGui.TYPE_BUTTON_SLOT, RecipeEditGui.buildTypeButton(next));
+        top.setItem(RecipeEditGui.TYPE_BUTTON_SLOT, RecipeEditGui.buildTypeButton(plugin, next));
     }
 
     private void handleTogglePriority(Inventory top) {
         boolean current = RecipeEditGui.readPriority(top);
-        top.setItem(RecipeEditGui.PRIORITY_BUTTON_SLOT, RecipeEditGui.buildPriorityButton(!current));
+        top.setItem(RecipeEditGui.PRIORITY_BUTTON_SLOT, RecipeEditGui.buildPriorityButton(plugin, !current));
     }
 
     private void handleSave(Player player, GuiHolder holder, Inventory top) {
@@ -215,23 +227,7 @@ public class GuiClickListener implements Listener {
         plugin.getRecipeRegistry().save(r);
         String savedKey = override ? "recipe.saved-with-priority" : "recipe.saved";
         player.sendMessage(mm.deserialize(prefix + plugin.getMessageUtil().get(savedKey, "id", id)));
-        returnSlotItemsToPlayer(player, top);
         RecipesListGui.open(plugin, player, 0);
-    }
-
-    private void returnSlotItemsToPlayer(Player player, Inventory top) {
-        for (int s : RecipeEditGui.CRAFT_SLOTS) {
-            ItemStack stack = top.getItem(s);
-            if (stack != null && !stack.getType().isAir()) {
-                player.getInventory().addItem(stack);
-                top.setItem(s, null);
-            }
-        }
-        ItemStack result = top.getItem(RecipeEditGui.RESULT_SLOT);
-        if (result != null && !result.getType().isAir()) {
-            player.getInventory().addItem(result);
-            top.setItem(RecipeEditGui.RESULT_SLOT, null);
-        }
     }
 }
 

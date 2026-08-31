@@ -37,10 +37,11 @@ public class RecipeEditGui {
         holder.setEditingRecipeId(editRecipeId);
 
         String titleText = editRecipeId == null
-                ? "<dark_green>Новый рецепт</dark_green>"
-                : "<dark_green>Рецепт:</dark_green> <white>" + editRecipeId;
+                ? plugin.getMessageUtil().get("gui.new-recipe-title")
+                : plugin.getMessageUtil().get("gui.recipe-title", "id", editRecipeId);
         var title = MiniMessage.miniMessage().deserialize(titleText);
         Inventory inv = Bukkit.createInventory(holder, 45, title);
+        holder.bind(inv);
 
         for (int i = 0; i < 45; i++) inv.setItem(i, GuiButton.filler());
 
@@ -50,8 +51,8 @@ public class RecipeEditGui {
         inv.setItem(22, GuiButton.create(Material.ARROW, GuiAction.NOOP, null, "<yellow>→"));
 
         inv.setItem(CANCEL_BUTTON_SLOT, GuiButton.create(Material.BARRIER, GuiAction.BACK, null,
-                "<red>Отмена",
-                "<gray>Изменения не будут сохранены"));
+                plugin.getMessageUtil().get("gui.cancel"),
+                plugin.getMessageUtil().get("gui.not-saved")));
 
         CustomRecipe existing = editRecipeId != null ? plugin.getRecipeRegistry().get(editRecipeId) : null;
         RecipeType type = existing != null ? existing.getType() : RecipeType.SHAPED;
@@ -61,10 +62,10 @@ public class RecipeEditGui {
             prefill(plugin, inv, existing);
         }
 
-        inv.setItem(TYPE_BUTTON_SLOT, buildTypeButton(type));
-        inv.setItem(PRIORITY_BUTTON_SLOT, buildPriorityButton(priority));
+        inv.setItem(TYPE_BUTTON_SLOT, buildTypeButton(plugin, type));
+        inv.setItem(PRIORITY_BUTTON_SLOT, buildPriorityButton(plugin, priority));
         inv.setItem(SAVE_BUTTON_SLOT, GuiButton.create(Material.EMERALD_BLOCK, GuiAction.RECIPE_SAVE, null,
-                "<green><b>Сохранить рецепт</b>"));
+                plugin.getMessageUtil().get("gui.save-recipe")));
 
         player.openInventory(inv);
     }
@@ -100,17 +101,17 @@ public class RecipeEditGui {
         return new ItemStack(ing.getMaterial());
     }
 
-    public static ItemStack buildTypeButton(RecipeType current) {
-        String label = current == RecipeType.SHAPED ? "С формой" : "Без формы";
-        String next = current == RecipeType.SHAPED ? "Без формы" : "С формой";
+    public static ItemStack buildTypeButton(MCraft plugin, RecipeType current) {
+        String label = plugin.getMessageUtil().get(current == RecipeType.SHAPED ? "gui.shaped" : "gui.shapeless");
+        String next = plugin.getMessageUtil().get(current == RecipeType.SHAPED ? "gui.shapeless" : "gui.shaped");
         Material icon = current == RecipeType.SHAPED ? Material.CRAFTING_TABLE : Material.CHEST;
         return GuiButton.create(icon, GuiAction.RECIPE_TOGGLE_TYPE, current.name(),
-                "<yellow>Тип: <white>" + label,
+                plugin.getMessageUtil().get("gui.type", "type", label),
                 "",
-                "<gray>Клик чтобы переключить на <white>" + next,
+                plugin.getMessageUtil().get("gui.click-switch", "type", next),
                 "",
-                "<dark_gray>С формой = позиция важна",
-                "<dark_gray>Без формы = любое расположение");
+                plugin.getMessageUtil().get("gui.shaped-help"),
+                plugin.getMessageUtil().get("gui.shapeless-help"));
     }
 
     public static RecipeType readType(Inventory inv) {
@@ -125,19 +126,19 @@ public class RecipeEditGui {
         }
     }
 
-    public static ItemStack buildPriorityButton(boolean override) {
+    public static ItemStack buildPriorityButton(MCraft plugin, boolean override) {
         Material icon = override ? Material.LIME_DYE : Material.GRAY_DYE;
-        String state = override ? "<green>Включён" : "<red>Выключен";
+        String state = plugin.getMessageUtil().get(override ? "gui.enabled" : "gui.disabled");
         String hint = override
-                ? "<gray>При конфликте с ванильным — работает наш"
-                : "<gray>При конфликте — работает ванильный (наш не сохранится)";
+                ? plugin.getMessageUtil().get("gui.priority-on-help")
+                : plugin.getMessageUtil().get("gui.priority-off-help");
         return GuiButton.create(icon, GuiAction.RECIPE_TOGGLE_PRIORITY,
                 String.valueOf(override),
-                "<yellow>Приоритет над ванильным: " + state,
+                plugin.getMessageUtil().get("gui.priority", "state", state),
                 "",
                 hint,
                 "",
-                "<gray>Клик чтобы переключить");
+                plugin.getMessageUtil().get("gui.click-toggle"));
     }
 
     public static boolean readPriority(Inventory inv) {
