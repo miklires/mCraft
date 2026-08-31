@@ -6,6 +6,7 @@ import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import io.github.miklires.mcraft.model.CustomItem;
@@ -54,6 +55,10 @@ public class ItemBuilder {
             if (model != null) meta.setItemModel(model);
         }
         meta.setUnbreakable(ci.isUnbreakable());
+        for (String flagName : ci.getItemFlags()) {
+            try { meta.addItemFlags(ItemFlag.valueOf(flagName.toUpperCase(java.util.Locale.ROOT))); }
+            catch (IllegalArgumentException ignored) {}
+        }
         meta.getPersistentDataContainer().set(idKey, PersistentDataType.STRING, ci.getId());
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, ci.getVersion());
 

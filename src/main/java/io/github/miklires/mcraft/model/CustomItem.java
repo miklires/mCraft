@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class CustomItem {
 
@@ -18,6 +20,8 @@ public class CustomItem {
     private int version = 1;
     private String itemModel;
     private boolean unbreakable;
+    private Set<String> tags = new LinkedHashSet<>();
+    private Set<String> itemFlags = new LinkedHashSet<>();
 
     public CustomItem() {}
 
@@ -44,6 +48,17 @@ public class CustomItem {
     public void setItemModel(String itemModel) { this.itemModel = itemModel; }
     public boolean isUnbreakable() { return unbreakable; }
     public void setUnbreakable(boolean unbreakable) { this.unbreakable = unbreakable; }
+    public Set<String> getTags() { return Set.copyOf(tags); }
+    public void setTags(java.util.Collection<String> tags) { this.tags = normalized(tags); }
+    public Set<String> getItemFlags() { return Set.copyOf(itemFlags); }
+    public void setItemFlags(java.util.Collection<String> flags) { this.itemFlags = normalized(flags); }
+
+    private static Set<String> normalized(java.util.Collection<String> values) {
+        Set<String> result = new LinkedHashSet<>();
+        if (values != null) values.stream().filter(java.util.Objects::nonNull).map(String::trim)
+                .filter(s -> !s.isEmpty()).map(s -> s.toLowerCase(java.util.Locale.ROOT)).forEach(result::add);
+        return result;
+    }
 
     public ItemStack buildItemStack(int amount) {
         return io.github.miklires.mcraft.registry.ItemBuilder.build(this, amount);
