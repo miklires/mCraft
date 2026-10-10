@@ -1,7 +1,7 @@
 name: mCraft
 version: ${version}
 main: io.github.miklires.mcraft.MCraft
-api-version: '26.2'
+api-version: '26.3'
 author: miklires
 description: Custom crafting recipes plugin
 folia-supported: true

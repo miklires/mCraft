@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.miklires"
-version = "1.1.0"
+version = "1.1.1"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
@@ -17,13 +17,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.169-beta")
     implementation("org.bstats:bstats-bukkit:3.1.0")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testCompileOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
+    testCompileOnly("io.papermc.paper:paper-api:26.3.build.169-beta")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly("io.papermc.paper:paper-api:26.2.build.112-stable")
+    testRuntimeOnly("io.papermc.paper:paper-api:26.3.build.169-beta")
 }
 
 tasks {
@@ -51,7 +51,7 @@ modrinth {
     versionName.set("mCraft ${project.version}")
     versionType.set("release")
     uploadFile.set(tasks.shadowJar)
-    gameVersions.add("26.2")
+    gameVersions.add("26.3")
     loaders.addAll("paper", "purpur", "folia")
     changelog.set(provider { file("CHANGELOG.md").readText() })
     syncBodyFrom.set(file("README.md").readText())

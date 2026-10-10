@@ -32,7 +32,7 @@ mCraft uses modern `item_model` components but does not generate or distribute r
 ## Requirements
 
 - Java 25
-- Paper, Purpur, or Folia 26.2
+- Paper, Purpur, or Folia 26.3
 
 ## Install
 
