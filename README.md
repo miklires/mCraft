@@ -36,7 +36,7 @@ mCraft uses modern `item_model` components but does not generate or distribute r
 
 ## Install
 
-1. Put `mCraft-1.1.0.jar` in `plugins`.
+1. Put `mCraft-1.1.1.jar` in `plugins`.
 2. Start the server.
 3. Add item definitions under `plugins/mCraft/items` or use the GUI recipe editor.
 
